@@ -147,13 +147,14 @@ class UVCViewController: UIViewController, WebSocketDelegate,
                 if error != nil { return }
                 self.LOG("setLocalDescription() succsess")
                 // 相手に送る
+                let jsonsdp: JSON = [
+                    "type":"answer"
+                    ,"sdp":answer!.sdp
+                ]
                 let jsonCandidate: JSON = [
                     "what": "answer" ,
-                    "data": [
-                        "type":"answer",
-                        "sdp":answer!.sdp
-                    ]
-                ]
+                    "data":jsonsdp.rawString(String.Encoding.utf8) ?? ""
+                ];
                 let message = jsonCandidate.rawString(String.Encoding.utf8)!
                 self.LOG("#answer");
                 self.LOG(message);
@@ -211,7 +212,7 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         //LOG("message: \(text)")
         // 受け取ったメッセージをJSONとしてパース
         //let jsonMessage = JSON.init(parseJSON: text);
-        let jsonMessage = JSON.parse(text)
+        let jsonMessage = JSON.init(parseJSON: text);
         let type = jsonMessage["what"].stringValue
         
         LOG("msg.what:  \(jsonMessage["what"].stringValue)" );
