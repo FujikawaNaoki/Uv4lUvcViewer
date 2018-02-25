@@ -1,11 +1,3 @@
-//
-//  ChatViewController.swift
-//  WebRTCHandsOn
-//
-//  Created by Takumi Minamoto on 2017/05/27.
-//  Copyright © 2017 tnoho. All rights reserved.
-//
-
 import UIKit
 import WebRTC
 import Starscream
@@ -25,9 +17,7 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     var audioSource: RTCAudioSource?
     var videoSource: RTCAVFoundationVideoSource?
 
-    @IBOutlet weak var cameraPreview: RTCCameraPreviewView!
     @IBOutlet weak var remoteVideoView: RTCEAGLVideoView!
-    
     
     override func viewDidLoad() {
         
@@ -66,10 +56,6 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         let videoSourceConstraints = RTCMediaConstraints(
             mandatoryConstraints: nil, optionalConstraints: nil)
         videoSource = peerConnectionFactory.avFoundationVideoSource(with: videoSourceConstraints)
-        
-        // localは使わない
-        // 映像ソースをプレビューに設定
-        //cameraPreview.captureSession = videoSource?.captureSession
     }
     
     func prepareNewConnection() -> RTCPeerConnection {
