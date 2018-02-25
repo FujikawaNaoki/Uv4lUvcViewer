@@ -13,6 +13,10 @@ import SwiftyJSON
 
 class UVCViewController: UIViewController, WebSocketDelegate,
                             RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
+    
+    let WS_SERVER_URL:String = "wss://raspberrypi2.local:8090/stream/webrtc";
+    let STUN_URL:String = "stun:raspberrypi2.local:3478";
+    
     var websocket: WebSocket! = nil
     
     var peerConnectionFactory: RTCPeerConnectionFactory! = nil
@@ -26,19 +30,20 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     
     
     override func viewDidLoad() {
-        super.viewDidLoad()
         
-        remoteVideoView.delegate = self
+        super.viewDidLoad();
+        
+        remoteVideoView.delegate = self;
         // RTCPeerConnectionFactoryの初期化
-        peerConnectionFactory = RTCPeerConnectionFactory()
+        peerConnectionFactory = RTCPeerConnectionFactory();
+        // 音声と映像ソースの初期化
+        startVideo();
         
-        startVideo()
-        //https://conf.space/WebRTCHandsOn/fuji
-        websocket = WebSocket(url: URL(string: "wss://conf.space/WebRTCHandsOnSig/fuji")!)
-        websocket.delegate = self
+        websocket = WebSocket(url: URL(string: WS_SERVER_URL)!);
+        websocket.delegate = self;
         //自己証明を許可
-        websocket.disableSSLCertValidation = true
-        websocket.connect()
+        websocket.disableSSLCertValidation = true;
+        websocket.connect();
     }
     
     deinit {
@@ -61,16 +66,18 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         let videoSourceConstraints = RTCMediaConstraints(
             mandatoryConstraints: nil, optionalConstraints: nil)
         videoSource = peerConnectionFactory.avFoundationVideoSource(with: videoSourceConstraints)
+        
+        // localは使わない
         // 映像ソースをプレビューに設定
-        cameraPreview.captureSession = videoSource?.captureSession
+        //cameraPreview.captureSession = videoSource?.captureSession
     }
     
     func prepareNewConnection() -> RTCPeerConnection {
+        
+        LOG("#prepareNewConnection")
         // STUN/TURNサーバーの指定
         let configuration = RTCConfiguration()
-        configuration.iceServers = [
-            RTCIceServer.init(
-                urlStrings: ["stun:stun.l.google.com:19302"])]
+        configuration.iceServers = [RTCIceServer.init(urlStrings: [STUN_URL])]
         // PeerConecctionの設定(今回はなし)
         let peerConnectionConstraints = RTCMediaConstraints(
             mandatoryConstraints: nil, optionalConstraints: nil)
@@ -103,12 +110,19 @@ class UVCViewController: UIViewController, WebSocketDelegate,
   
     @IBAction func connectButtonAction(_ sender: Any) {
         // Connectボタンを押した時
-        if peerConnection == nil {
-            LOG("make Offer")
-            makeOffer()
-        } else {
-            LOG("peer already exist.")
-        }
+        // call リクエストを送る
+        let jsonMsg: JSON = [
+            "what":"call",
+            "options":[
+                "force_hw_vcodec": false,
+                "vformat": "60"
+            ]
+        ];
+        let message:String = jsonMsg.rawString(String.Encoding.utf8)!;
+        LOG("#call");
+        LOG(message);
+        websocket.write(string:message);
+        
     }
     
     func websocketDidConnect(socket: WebSocket) {
@@ -117,32 +131,6 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     
     func websocketDidDisconnect(socket: WebSocket, error: NSError?) {
         LOG("error: \(String(describing: error?.localizedDescription))")
-    }
-    
-    func makeOffer() {
-        // PeerConnectionを生成
-        peerConnection = prepareNewConnection()
-        // Offerの設定 今回は映像も音声も受け取る
-        let constraints = RTCMediaConstraints(mandatoryConstraints: [
-            "OfferToReceiveAudio": "true",
-            "OfferToReceiveVideo": "true"
-            ], optionalConstraints: nil)
-        let offerCompletion = { (offer: RTCSessionDescription?, error: Error?) in
-            // Offerの生成が完了した際の処理
-            if error != nil { return }
-            self.LOG("createOffer() succsess")
-            let setLocalDescCompletion = {(error: Error?) in
-                // setLocalDescCompletionが完了した際の処理
-                if error != nil { return }
-                self.LOG("setLocalDescription() succsess")
-                // 相手に送る
-                self.sendSDP(offer!)
-            }
-            // 生成したOfferを自分のSDPとして設定
-            self.peerConnection.setLocalDescription(offer!, completionHandler: setLocalDescCompletion)
-        }
-        // Offerを生成
-        self.peerConnection.offer(for: constraints, completionHandler: offerCompletion)
     }
     
     func makeAnswer() {
@@ -159,7 +147,18 @@ class UVCViewController: UIViewController, WebSocketDelegate,
                 if error != nil { return }
                 self.LOG("setLocalDescription() succsess")
                 // 相手に送る
-                self.sendSDP(answer!)
+                let jsonCandidate: JSON = [
+                    "what": "answer" ,
+                    "data": [
+                        "type":"answer",
+                        "sdp":answer!.sdp
+                    ]
+                ]
+                let message = jsonCandidate.rawString(String.Encoding.utf8)!
+                self.LOG("#answer");
+                self.LOG(message);
+                // 相手に送信
+                self.websocket.write(string: message)
             }
             self.peerConnection.setLocalDescription(answer!, completionHandler: setLocalDescCompletion)
         }
@@ -167,25 +166,12 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         self.peerConnection.answer(for: constraints, completionHandler: answerCompletion)
     }
     
-    func sendSDP(_ desc: RTCSessionDescription) {
-        LOG("---sending sdp ---")
-        let jsonSdp: JSON = [
-            "sdp": desc.sdp, // SDP本体
-            "type": RTCSessionDescription.string(for: desc.type) // offer か answer か
-        ]
-        // JSONを生成
-        let message = jsonSdp.rawString()!
-        LOG("sending SDP=" + message)
-        // 相手に送信
-        websocket.write(string: message)
-    }
-    
     func setOffer(_ offer: RTCSessionDescription) {
         if peerConnection != nil {
             LOG("peerConnection alreay exist!")
         }
         // PeerConnectionを生成する
-        peerConnection = prepareNewConnection()
+        self.peerConnection = prepareNewConnection()
         self.peerConnection.setRemoteDescription(offer, completionHandler: {(error: Error?) in
             if error == nil {
                 self.LOG("setRemoteDescription(offer) succsess")
@@ -222,35 +208,53 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     }
     
     func websocketDidReceiveMessage(socket: WebSocket, text: String) {
-        LOG("message: \(text)")
+        //LOG("message: \(text)")
         // 受け取ったメッセージをJSONとしてパース
+        //let jsonMessage = JSON.init(parseJSON: text);
         let jsonMessage = JSON.parse(text)
-        let type = jsonMessage["type"].stringValue
+        let type = jsonMessage["what"].stringValue
+        
+        LOG("msg.what:  \(jsonMessage["what"].stringValue)" );
+        LOG("msg.type:  \(jsonMessage["type"].stringValue)" );
+        
         switch (type) {
         case "offer":
             // offerを受け取った時の処理
             LOG("Received offer ...")
+            let dataStr = jsonMessage["data"].stringValue;
+            let dataMessage = JSON.init(parseJSON: dataStr);
             let offer = RTCSessionDescription(
                 type: RTCSessionDescription.type(for: type),
-                sdp: jsonMessage["sdp"].stringValue)
-            setOffer(offer)
+                sdp: dataMessage["sdp"].stringValue)
+            self.setOffer(offer);
+            break;
         case "answer":
             // answerを受け取った時の処理
             LOG("Received answer ...")
-            let answer = RTCSessionDescription(
-                type: RTCSessionDescription.type(for: type),
-                sdp: jsonMessage["sdp"].stringValue)
-            setAnswer(answer)
+            break;
         case "candidate":
-            LOG("Received ICE candidate ...")
-            let candidate = RTCIceCandidate(
-                sdp: jsonMessage["ice"]["candidate"].stringValue,
-                sdpMLineIndex: jsonMessage["ice"]["sdpMLineIndex"].int32Value,
-                sdpMid: jsonMessage["ice"]["sdpMid"].stringValue)
-            addIceCandidate(candidate)
+            LOG("Received candidate ...")
+            break;
+        case "geticecandidate":
+            LOG("Received geticecandidate ...")
+            break;
+        case "iceCandidates":
+            LOG("Received iceCandidates ...")
+            jsonMessage["data"].forEach{(_, data) in
+                addIceCandidate(RTCIceCandidate(
+                    sdp:data["candidate"].stringValue,
+                    sdpMLineIndex:data["sdpMLineIndex"].int32Value,
+                    sdpMid:data["sdpMid"].stringValue
+                ));
+            }
+            break;
         case "close":
             LOG("peer is closed ...")
             hangUp()
+            break;
+        case "message":
+            LOG(text);
+            break;
         default:
             return
         }
@@ -317,7 +321,7 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
         // Candidate(自分への接続先候補情報)が生成された際に呼ばれます
         if candidate.sdpMid != nil {
-            sendIceCandidate(candidate)
+            //sendIceCandidate(candidate)
         } else {
             LOG("empty ice event")
         }
@@ -326,15 +330,16 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     func sendIceCandidate(_ candidate: RTCIceCandidate) {
         LOG("---sending ICE candidate ---")
         let jsonCandidate: JSON = [
-            "type": "candidate",
-            "ice": [
+            "what": "addIceCandidate",
+            "data": [
                 "candidate": candidate.sdp,
                 "sdpMLineIndex": candidate.sdpMLineIndex,
                 "sdpMid": candidate.sdpMid!
             ]
         ]
-        let message = jsonCandidate.rawString()!
-        LOG("sending candidate=" + message)
+        let message = jsonCandidate.rawString(String.Encoding.utf8)!
+        LOG("#addIceCandidate");
+        LOG(message);
         websocket.write(string: message)
     }
     

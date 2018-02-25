@@ -4,7 +4,7 @@ PODS:
   - WebRTC (58.17.16937)
 
 DEPENDENCIES:
-  - Starscream (~> 2.0.3)
+  - Starscream (~> 2.0.4)
   - SwiftyJSON
   - WebRTC (= 58.17.16937)
 
@@ -13,6 +13,6 @@ SPEC CHECKSUMS:
   SwiftyJSON: 070dabdcb1beb81b247c65ffa3a79dbbfb3b48aa
   WebRTC: 1e9a85bf75509eec44be6478c64e9de65ac82332
 
-PODFILE CHECKSUM: 19485989425b8ce4b85ac9f0e8cf327b44c6a92d
+PODFILE CHECKSUM: aa2c007bd13ebd805d52379d069711ff8646e8e3
 
 COCOAPODS: 1.4.0
