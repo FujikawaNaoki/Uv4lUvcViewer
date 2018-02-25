@@ -40,7 +40,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="agB-dg-FQF"/>
                     <connections>
-                        <segue destination="Erv-cr-jKP" kind="show" identifier="joinToRoom" id="ea5-UN-baq"/>
+                        <segue destination="Erv-cr-jKP" kind="show" identifier="connectToServer" id="ea5-UN-baq"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
