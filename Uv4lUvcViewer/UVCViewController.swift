@@ -19,6 +19,16 @@ class UVCViewController: UIViewController, WebSocketDelegate,
 
     @IBOutlet weak var remoteVideoView: RTCEAGLVideoView!
     
+    
+    //RTCVideoCapturer -> RTCVideoSource (RTCVideoCapturerDelegate) -> RTCVideoTrack -> RTCVideoRenderer (プロトコル)
+    //RTCVideoCapturerDelegate を実装したクラスを用意
+    // RTCVideoCapturer にセットし、 capturer(_:didCapture:) で受け取った映像フレームを加工してから
+    // RTCVideoSource の　capturer(_:didCapture:) に加工後の映像フレームを渡します。
+    // RTCVideoCapture と RTCVideoSource の間にフィルターを挟む
+
+    //var rtcVideoSource:RTCVideoSource?
+    //var rtcVideoCapture:RTCVideoCapturer?
+    
     override func viewDidLoad() {
         
         super.viewDidLoad();

@@ -1,11 +1,3 @@
-//
-//  ViewController.swift
-//  WebRTCHandsOn
-//
-//  Created by Takumi Minamoto on 2017/05/27.
-//  Copyright © 2017 tnoho. All rights reserved.
-//
-
 import UIKit
 
 class ViewController: UIViewController {

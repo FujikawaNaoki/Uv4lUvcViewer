@@ -6,7 +6,7 @@ target 'Uv4lUvcViewer' do
   use_frameworks!
 
   # Pods for Uv4lUvcViewer
-  pod 'WebRTC', '58.17.16937'
+  pod 'WebRTC', '63.11.20455'
   pod 'Starscream', '~> 2.0.4'
   pod 'SwiftyJSON'
 end
