@@ -1,0 +1,18 @@
+PODS:
+  - Starscream (2.0.4)
+  - SwiftyJSON (4.0.0)
+  - WebRTC (58.17.16937)
+
+DEPENDENCIES:
+  - Starscream (~> 2.0.3)
+  - SwiftyJSON
+  - WebRTC (= 58.17.16937)
+
+SPEC CHECKSUMS:
+  Starscream: df5974ee928b157c8eda8af8de7c620276b7dfcc
+  SwiftyJSON: 070dabdcb1beb81b247c65ffa3a79dbbfb3b48aa
+  WebRTC: 1e9a85bf75509eec44be6478c64e9de65ac82332
+
+PODFILE CHECKSUM: 19485989425b8ce4b85ac9f0e8cf327b44c6a92d
+
+COCOAPODS: 1.4.0
