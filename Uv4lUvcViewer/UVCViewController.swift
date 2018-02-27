@@ -16,9 +16,81 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     var remoteVideoTrack: RTCVideoTrack?
     var audioSource: RTCAudioSource?
     var videoSource: RTCAVFoundationVideoSource?
+    var recorder:AVAudioRecorder!
 
     @IBOutlet weak var remoteVideoView: RTCEAGLVideoView!
     
+    @IBOutlet weak var waveformView: WaveformView!
+    
+    
+    func startRecording() {
+        let recordingSession = AVAudioSession.sharedInstance()
+        let recorderSettings = [AVSampleRateKey: NSNumber(value:44100.0),
+                                AVFormatIDKey: NSNumber(value:kAudioFormatAppleLossless),
+                                AVNumberOfChannelsKey: NSNumber(value: 2),
+                                AVEncoderAudioQualityKey: NSNumber(value: Int8(AVAudioQuality.min.rawValue))]
+        let url:URL = URL(fileURLWithPath:"/dev/null");
+        do {
+            try recordingSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
+            try recordingSession.setActive(true)
+            self.recorder = try AVAudioRecorder.init(url: url, settings: recorderSettings as [String : Any])
+            let displayLink: CADisplayLink = CADisplayLink(target: self, selector: #selector(UVCViewController.updateMeters))
+            displayLink.add(to: RunLoop.current, forMode: RunLoopMode.commonModes)
+            self.recorder.prepareToRecord()
+            self.recorder.isMeteringEnabled = true;
+            self.recorder.record()
+            print("recorder enabled")
+        } catch {
+            print("recorder init failed")
+        }
+    }
+    func checkMicPermission() -> Bool {
+        var permissionCheck: Bool = false
+        
+        switch AVAudioSession.sharedInstance().recordPermission() {
+        case AVAudioSessionRecordPermission.granted:
+            permissionCheck = true
+        case AVAudioSessionRecordPermission.denied:
+            permissionCheck = false
+        case AVAudioSessionRecordPermission.undetermined:
+            AVAudioSession.sharedInstance().requestRecordPermission({ (granted) in
+                if granted {
+                    permissionCheck = true
+                } else {
+                    permissionCheck = false
+                }
+            })
+        default:
+            break
+        }
+        
+        return permissionCheck
+    }
+    @objc func updateMeters() {
+        var normalizedValue: Float
+        recorder.updateMeters()
+        normalizedValue = _normalizedPowerLevelFromDecibels(decibels: recorder.averagePower(forChannel: 0))
+        self.waveformView.updateWithLevel(level: normalizedValue)
+    }
+    
+    //Recorder Setup Begin
+    @objc func setupRecorder() {
+        if(checkMicPermission()) {
+            startRecording()
+        } else {
+            print("permission denied")
+        }
+    }
+    
+    
+    func _normalizedPowerLevelFromDecibels(decibels:Float) -> Float {
+        if (decibels < -60.0 || decibels == 0.0) {
+            return 0.0;
+        }
+        
+        return pow((pow(10.0, 0.05 * decibels) - pow(10.0, 0.05 * -60.0)) * (1.0 / (1.0 - pow(10.0, 0.05 * -60.0))), 1.0 / 2.0);
+        
+    }
     
     //RTCVideoCapturer -> RTCVideoSource (RTCVideoCapturerDelegate) -> RTCVideoTrack -> RTCVideoRenderer (プロトコル)
     //RTCVideoCapturerDelegate を実装したクラスを用意
@@ -32,6 +104,8 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     override func viewDidLoad() {
         
         super.viewDidLoad();
+        
+        setupRecorder();
         
         remoteVideoView.delegate = self;
         // RTCPeerConnectionFactoryの初期化
@@ -276,21 +350,7 @@ class UVCViewController: UIViewController, WebSocketDelegate,
                 // remoteVideoViewに紐づける
                 self.remoteVideoTrack?.add(self.remoteVideoView)
                 
-//                // 音声ストリームの取得
-//                for track:RTCAudioTrack in (stream.audioTracks as! Array<RTCAudioTrack>){
-//
-//                }
-                
-                //
-                 //AVAudioSession.sharedInstance().outputDataSource
-                
-//                if stream.audioTracks.count > 0 {
-//                    let audioTrack = audioTracks[0]
-//                    // ベースとなる音声のコンポジション作成
-//                    let compositionAudioTrack: AVMutableCompositionTrack! = mixComposition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: kCMPersistentTrackID_Invalid)
-//                    // 音声の長さ設定
-//                    try! compositionAudioTrack.insertTimeRange(CMTimeRangeMake(kCMTimeZero, videoAsset.duration), of: audioTrack, at: kCMTimeZero)
-//                }
+                self.startRecording();
                 
             }
         })

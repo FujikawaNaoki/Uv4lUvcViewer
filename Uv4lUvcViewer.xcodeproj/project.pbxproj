@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		260D8EC884A51B33DA90866B /* Pods_Uv4lUvcViewer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AB2F17EC1E1735170E93DE9 /* Pods_Uv4lUvcViewer.framework */; };
+		82B7B7BC20459EEA0066B4B9 /* WaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B7B7BB20459EE90066B4B9 /* WaveformView.swift */; };
 		E93377FA1ED962BB0011FBC1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93377F91ED962BB0011FBC1 /* AppDelegate.swift */; };
 		E93377FC1ED962BB0011FBC1 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93377FB1ED962BB0011FBC1 /* ViewController.swift */; };
 		E93377FF1ED962BB0011FBC1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E93377FD1ED962BB0011FBC1 /* Main.storyboard */; };
@@ -20,6 +21,7 @@
 		238DD228910496358836714B /* Pods-Uv4lUvcViewer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Uv4lUvcViewer.release.xcconfig"; path = "Pods/Target Support Files/Pods-Uv4lUvcViewer/Pods-Uv4lUvcViewer.release.xcconfig"; sourceTree = "<group>"; };
 		2FB72041CE8B13A28172CA27 /* Pods-Uv4lUvcViewer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Uv4lUvcViewer.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Uv4lUvcViewer/Pods-Uv4lUvcViewer.debug.xcconfig"; sourceTree = "<group>"; };
 		3AB2F17EC1E1735170E93DE9 /* Pods_Uv4lUvcViewer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Uv4lUvcViewer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		82B7B7BB20459EE90066B4B9 /* WaveformView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WaveformView.swift; sourceTree = "<group>"; };
 		E93377F61ED962BB0011FBC1 /* Uv4lUvcViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Uv4lUvcViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E93377F91ED962BB0011FBC1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E93377FB1ED962BB0011FBC1 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 				E93378021ED962BB0011FBC1 /* LaunchScreen.storyboard */,
 				E93378051ED962BB0011FBC1 /* Info.plist */,
 				E93829161ED9BFF000FD4E46 /* UVCViewController.swift */,
+				82B7B7BB20459EE90066B4B9 /* WaveformView.swift */,
 			);
 			path = Uv4lUvcViewer;
 			sourceTree = "<group>";
@@ -228,6 +231,7 @@
 				E93377FC1ED962BB0011FBC1 /* ViewController.swift in Sources */,
 				E93829171ED9BFF000FD4E46 /* UVCViewController.swift in Sources */,
 				E93377FA1ED962BB0011FBC1 /* AppDelegate.swift in Sources */,
+				82B7B7BC20459EEA0066B4B9 /* WaveformView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
