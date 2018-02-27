@@ -275,6 +275,23 @@ class UVCViewController: UIViewController, WebSocketDelegate,
                 self.remoteVideoTrack = stream.videoTracks[0]
                 // remoteVideoViewに紐づける
                 self.remoteVideoTrack?.add(self.remoteVideoView)
+                
+//                // 音声ストリームの取得
+//                for track:RTCAudioTrack in (stream.audioTracks as! Array<RTCAudioTrack>){
+//
+//                }
+                
+                //
+                 //AVAudioSession.sharedInstance().outputDataSource
+                
+//                if stream.audioTracks.count > 0 {
+//                    let audioTrack = audioTracks[0]
+//                    // ベースとなる音声のコンポジション作成
+//                    let compositionAudioTrack: AVMutableCompositionTrack! = mixComposition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+//                    // 音声の長さ設定
+//                    try! compositionAudioTrack.insertTimeRange(CMTimeRangeMake(kCMTimeZero, videoAsset.duration), of: audioTrack, at: kCMTimeZero)
+//                }
+                
             }
         })
     }
@@ -390,11 +407,7 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         _ = self.navigationController?.popToRootViewController(animated: true)
     }
     
-    // 参考にさせていただきました！Thanks: http://seesaakyoto.seesaa.net/article/403680516.html
-    func LOG(_ body: String = "",
-             function: String = #function,
-             line: Int = #line)
-    {
+    func LOG(_ body: String = "",function: String = #function,line: Int = #line){
         print("[\(function) : \(line)] \(body)")
     }
 }
