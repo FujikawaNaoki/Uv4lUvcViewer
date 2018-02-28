@@ -13,7 +13,12 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     
     var peerConnectionFactory: RTCPeerConnectionFactory! = nil
     var peerConnection: RTCPeerConnection! = nil
+    
     var remoteVideoTrack: RTCVideoTrack?
+    var remoteAudioTrack: RTCAudioTrack?
+    
+    //var localAudioTrack: RTCAudioTrack?
+    
     var audioSource: RTCAudioSource?
     var videoSource: RTCAVFoundationVideoSource?
     var recorder:AVAudioRecorder!
@@ -24,7 +29,8 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     
     
     func startRecording() {
-        let recordingSession = AVAudioSession.sharedInstance()
+        let recordingSession = AVAudioSession.sharedInstance();
+        
         let recorderSettings = [AVSampleRateKey: NSNumber(value:44100.0),
                                 AVFormatIDKey: NSNumber(value:kAudioFormatAppleLossless),
                                 AVNumberOfChannelsKey: NSNumber(value: 2),
@@ -138,8 +144,22 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         
         // 映像ソースの設定
         let videoSourceConstraints = RTCMediaConstraints(
-            mandatoryConstraints: nil, optionalConstraints: nil)
-        videoSource = peerConnectionFactory.avFoundationVideoSource(with: videoSourceConstraints)
+            mandatoryConstraints: nil, optionalConstraints: nil);
+        
+        videoSource = peerConnectionFactory.avFoundationVideoSource(with: videoSourceConstraints);
+        
+        // 音声トラックの作成
+//        localAudioTrack = peerConnectionFactory.audioTrack(with: audioSource!, trackId: "ARDAMSa0");
+//        // PeerConnectionからSenderを作成
+//        let audioSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindAudio, streamId: "ARDAMS")
+//        // Senderにトラックを設定
+//        audioSender.track = localAudioTrack
+//        // 映像トラックの作成
+//        let localVideoTrack = peerConnectionFactory.videoTrack(with: videoSource!, trackId: "ARDAMSv0")
+//        // PeerConnectionからVideoのSenderを作成
+//        let videoSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindVideo, streamId: "ARDAMS")
+//        // Senderにトラックを設定
+//        videoSender.track = localVideoTrack
     }
     
     func prepareNewConnection() -> RTCPeerConnection {
@@ -325,16 +345,30 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {
+        
+        LOG("stream.audioTracks.count= " + stream.audioTracks.count.description);
+        LOG("stream.videoTracks.count= " + stream.videoTracks.count.description);
+        
+        if (stream.audioTracks.count > 1 || stream.videoTracks.count > 1) {
+            LOG("Weird-looking stream: " + stream.description)
+            return
+        }
+        
+        if (stream.audioTracks.count >= 1) {
+            remoteAudioTrack = stream.audioTracks[0];
+            //localAudioTrack = remoteAudioTrack;
+        }
+                
         // 映像/音声が追加された際に呼ばれます
         LOG("-- peer.onaddstream()")
         DispatchQueue.main.async(execute: { () -> Void in
             // mainスレッドで実行
-            if (stream.videoTracks.count > 0) {
+            if (stream.videoTracks.count == 1) {
                 // ビデオのトラックを取り出して
-                self.remoteVideoTrack = stream.videoTracks[0]
+                self.remoteVideoTrack = stream.videoTracks[0];
                 // remoteVideoViewに紐づける
                 self.remoteVideoTrack?.add(self.remoteVideoView)
-                // 音声描画
+                
                 self.startRecording();
             }
         })
