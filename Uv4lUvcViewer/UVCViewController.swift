@@ -29,8 +29,21 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     
     
     func startRecording() {
-        let recordingSession = AVAudioSession.sharedInstance();
         
+        /**
+         M61 より RTCAudioSession という音声を扱うクラスが追加されました（プライベートな実装でしたがフレームワークで利用できるようになりました）。
+         ほぼ AVAudioSession のプロパティの単純なラッパーです。このオブジェクトのプロパティを操作すると、
+         WebRTC で使われるスレッドをロックしてから AVAudioSession のプロパティにアクセスしてくれます。
+         プロパティやセッター以外は AVAudioSession を直接使っても問題ありません。
+         音声に関しては iOS やハードウェアの制約があり、 WebRTC ライブラリの音声周りの実装もいろいろと制限されます。
+         API の中でも特に情報がない分野なので、がんばって自力でどうにかしましょう。
+         https://gist.github.com/szktty/999a34c64cc4ea60de43c4c1adc93203
+        */
+        let rtcAudioSession = RTCAudioSession.sharedInstance();
+        
+        
+        
+        let recordingSession = AVAudioSession.sharedInstance();
         let recorderSettings = [AVSampleRateKey: NSNumber(value:44100.0),
                                 AVFormatIDKey: NSNumber(value:kAudioFormatAppleLossless),
                                 AVNumberOfChannelsKey: NSNumber(value: 2),
