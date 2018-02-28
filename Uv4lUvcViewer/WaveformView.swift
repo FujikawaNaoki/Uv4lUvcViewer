@@ -126,6 +126,10 @@ class WaveformView: UIView {
         self.setNeedsDisplay()
     }
     
+    func LOG(_ body: String = "",function: String = #function,line: Int = #line){
+        print("[\(function) : \(line)] \(body)")
+    }
+    
 }
 
 func CGPointMake(_ x: Float, _ y: Float) -> CGPoint {

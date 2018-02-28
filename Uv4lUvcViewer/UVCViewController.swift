@@ -31,17 +31,17 @@ class UVCViewController: UIViewController, WebSocketDelegate,
                                 AVEncoderAudioQualityKey: NSNumber(value: Int8(AVAudioQuality.min.rawValue))]
         let url:URL = URL(fileURLWithPath:"/dev/null");
         do {
-            try recordingSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
-            try recordingSession.setActive(true)
-            self.recorder = try AVAudioRecorder.init(url: url, settings: recorderSettings as [String : Any])
-            let displayLink: CADisplayLink = CADisplayLink(target: self, selector: #selector(UVCViewController.updateMeters))
-            displayLink.add(to: RunLoop.current, forMode: RunLoopMode.commonModes)
-            self.recorder.prepareToRecord()
+            try recordingSession.setCategory(AVAudioSessionCategorySoloAmbient);
+            try recordingSession.setActive(true);
+            self.recorder = try AVAudioRecorder.init(url: url, settings: recorderSettings as [String : Any]);
+            let displayLink: CADisplayLink = CADisplayLink(target: self, selector: #selector(UVCViewController.updateMeters));
+            displayLink.add(to: RunLoop.current, forMode: RunLoopMode.commonModes);
+            self.recorder.prepareToRecord();
             self.recorder.isMeteringEnabled = true;
-            self.recorder.record()
-            print("recorder enabled")
+            self.recorder.record();
+            print("recorder enabled");
         } catch {
-            print("recorder init failed")
+            print("recorder init failed");
         }
     }
     func checkMicPermission() -> Bool {
@@ -76,7 +76,7 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     //Recorder Setup Begin
     @objc func setupRecorder() {
         if(checkMicPermission()) {
-            startRecording()
+            //startRecording()
         } else {
             print("permission denied")
         }
@@ -155,21 +155,6 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         let peerConnection = peerConnectionFactory.peerConnection(
             with: configuration, constraints: peerConnectionConstraints, delegate: self)
         
-        // 音声トラックの作成
-        let localAudioTrack = peerConnectionFactory.audioTrack(with: audioSource!, trackId: "ARDAMSa0")
-        // PeerConnectionからSenderを作成
-        let audioSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindAudio, streamId: "ARDAMS")
-        // Senderにトラックを設定
-        audioSender.track = localAudioTrack
-        
-        
-        // 映像トラックの作成
-        let localVideoTrack = peerConnectionFactory.videoTrack(with: videoSource!, trackId: "ARDAMSv0")
-        // PeerConnectionからVideoのSenderを作成
-        let videoSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindVideo, streamId: "ARDAMS")
-        // Senderにトラックを設定
-        videoSender.track = localVideoTrack
-        
         return peerConnection
     }
 
@@ -223,7 +208,7 @@ class UVCViewController: UIViewController, WebSocketDelegate,
                 ]
                 let jsonCandidate: JSON = [
                     "what": "answer" ,
-                    "data":jsonsdp.rawString(String.Encoding.utf8) ?? ""
+                    "data": jsonsdp.rawString(String.Encoding.utf8) ?? ""
                 ];
                 let message = jsonCandidate.rawString(String.Encoding.utf8)!
                 self.LOG("#answer");
@@ -349,9 +334,8 @@ class UVCViewController: UIViewController, WebSocketDelegate,
                 self.remoteVideoTrack = stream.videoTracks[0]
                 // remoteVideoViewに紐づける
                 self.remoteVideoTrack?.add(self.remoteVideoView)
-                
+                // 音声描画
                 self.startRecording();
-                
             }
         })
     }

@@ -63,11 +63,6 @@
                                 <rect key="frame" x="0.0" y="20" width="320" height="548"/>
                                 <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
-                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="M4b-6K-wql" customClass="WaveformView" customModule="Uv4lUvcViewer" customModuleProvider="target">
-                                <rect key="frame" x="40" y="220" width="240" height="128"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                            </view>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="84r-yb-B9O">
                                 <rect key="frame" x="200" y="518" width="100" height="30"/>
                                 <color key="backgroundColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
@@ -107,19 +102,30 @@
                                     <action selector="connectButtonAction:" destination="Erv-cr-jKP" eventType="touchUpInside" id="Wik-Sa-gZB"/>
                                 </connections>
                             </button>
+                            <view contentMode="right" translatesAutoresizingMaskIntoConstraints="NO" id="M4b-6K-wql" customClass="WaveformView" customModule="Uv4lUvcViewer">
+                                <rect key="frame" x="134" y="40" width="166" height="63"/>
+                                <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <accessibility key="accessibilityConfiguration">
+                                    <bool key="isElement" value="YES"/>
+                                </accessibility>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="23X-fE-Gi3" secondAttribute="trailing" id="1gW-Mg-Lz5"/>
                             <constraint firstItem="23X-fE-Gi3" firstAttribute="top" secondItem="7b2-oR-LNo" secondAttribute="bottom" id="A4W-6V-pmj"/>
+                            <constraint firstItem="M4b-6K-wql" firstAttribute="trailing" secondItem="84r-yb-B9O" secondAttribute="trailing" id="D1X-ov-cy6"/>
                             <constraint firstAttribute="trailing" secondItem="84r-yb-B9O" secondAttribute="trailing" constant="20" id="Pg3-Ez-h6D"/>
                             <constraint firstItem="IcZ-RY-DWr" firstAttribute="leading" secondItem="U1b-sh-a1O" secondAttribute="leading" constant="20" id="Sq4-AZ-LlX"/>
                             <constraint firstItem="23X-fE-Gi3" firstAttribute="leading" secondItem="U1b-sh-a1O" secondAttribute="leading" id="aYA-Q8-eSm"/>
+                            <constraint firstAttribute="bottom" secondItem="M4b-6K-wql" secondAttribute="bottom" constant="465" id="dHQ-yB-NsQ"/>
                             <constraint firstItem="xxE-si-1Pd" firstAttribute="top" secondItem="iOO-w5-mzR" secondAttribute="bottom" constant="20" id="ebW-jA-o6h"/>
                             <constraint firstItem="xxE-si-1Pd" firstAttribute="top" secondItem="23X-fE-Gi3" secondAttribute="bottom" id="ids-gU-eui"/>
                             <constraint firstItem="IcZ-RY-DWr" firstAttribute="top" secondItem="7b2-oR-LNo" secondAttribute="bottom" constant="20" id="jO3-lf-SKm"/>
                             <constraint firstItem="xxE-si-1Pd" firstAttribute="top" secondItem="84r-yb-B9O" secondAttribute="bottom" constant="20" id="klB-8N-O0G"/>
                             <constraint firstItem="iOO-w5-mzR" firstAttribute="leading" secondItem="U1b-sh-a1O" secondAttribute="leading" constant="20" id="tzc-st-LeK"/>
+                            <constraint firstItem="M4b-6K-wql" firstAttribute="leading" secondItem="IcZ-RY-DWr" secondAttribute="trailing" constant="14" id="vHV-Pj-ef3"/>
+                            <constraint firstItem="M4b-6K-wql" firstAttribute="top" secondItem="IcZ-RY-DWr" secondAttribute="top" id="zUd-UQ-sYq"/>
                         </constraints>
                     </view>
                     <connections>
@@ -129,7 +135,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="MXO-ID-p6e" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="992.79999999999995" y="138.98050974512745"/>
+            <point key="canvasLocation" x="991.875" y="138.38028169014083"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="7u8-vi-y9r">
