@@ -4,7 +4,72 @@ import Starscream
 import SwiftyJSON
 
 class UVCViewController: UIViewController, WebSocketDelegate,
-                            RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
+RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
+    func websocketDidConnect(socket: WebSocketClient) {
+        LOG()
+    }
+    
+    func websocketDidDisconnect(socket: WebSocketClient, error: Error?) {
+        LOG("error: \(String(describing: error?.localizedDescription))")
+    }
+    
+    func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
+        //LOG("message: \(text)")
+        // 受け取ったメッセージをJSONとしてパース
+        //let jsonMessage = JSON.init(parseJSON: text);
+        let jsonMessage = JSON.init(parseJSON: text);
+        let type = jsonMessage["what"].stringValue
+        
+        LOG("msg.what:  \(jsonMessage["what"].stringValue)" );
+        LOG("msg.type:  \(jsonMessage["type"].stringValue)" );
+        
+        switch (type) {
+        case "offer":
+            // offerを受け取った時の処理
+            LOG("Received offer ...")
+            let dataStr = jsonMessage["data"].stringValue;
+            let dataMessage = JSON.init(parseJSON: dataStr);
+            let offer = RTCSessionDescription(
+                type: RTCSessionDescription.type(for: type),
+                sdp: dataMessage["sdp"].stringValue)
+            self.setOffer(offer);
+            break;
+        case "answer":
+            // answerを受け取った時の処理
+            LOG("Received answer ...")
+            break;
+        case "candidate":
+            LOG("Received candidate ...")
+            break;
+        case "geticecandidate":
+            LOG("Received geticecandidate ...")
+            break;
+        case "iceCandidates":
+            LOG("Received iceCandidates ...")
+            jsonMessage["data"].forEach{(_, data) in
+                addIceCandidate(RTCIceCandidate(
+                    sdp:data["candidate"].stringValue,
+                    sdpMLineIndex:data["sdpMLineIndex"].int32Value,
+                    sdpMid:data["sdpMid"].stringValue
+                ));
+            }
+            break;
+        case "close":
+            LOG("peer is closed ...")
+            hangUp()
+            break;
+        case "message":
+            LOG(text);
+            break;
+        default:
+            return
+        }
+    }
+    
+    func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
+        LOG("data.count: \(data.count)");
+    }
+    
     
     let WS_SERVER_URL:String = "wss://raspberrypi2.local:8090/stream/webrtc";
     let STUN_URL:String = "stun:raspberrypi2.local:3478";
@@ -217,13 +282,6 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         
     }
     
-    func websocketDidConnect(socket: WebSocket) {
-        LOG()
-    }
-    
-    func websocketDidDisconnect(socket: WebSocket, error: NSError?) {
-        LOG("error: \(String(describing: error?.localizedDescription))")
-    }
     
     func makeAnswer() {
         LOG("sending Answer. Creating remote session description...")
@@ -300,62 +358,6 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         }
     }
     
-    func websocketDidReceiveMessage(socket: WebSocket, text: String) {
-        //LOG("message: \(text)")
-        // 受け取ったメッセージをJSONとしてパース
-        //let jsonMessage = JSON.init(parseJSON: text);
-        let jsonMessage = JSON.init(parseJSON: text);
-        let type = jsonMessage["what"].stringValue
-        
-        LOG("msg.what:  \(jsonMessage["what"].stringValue)" );
-        LOG("msg.type:  \(jsonMessage["type"].stringValue)" );
-        
-        switch (type) {
-        case "offer":
-            // offerを受け取った時の処理
-            LOG("Received offer ...")
-            let dataStr = jsonMessage["data"].stringValue;
-            let dataMessage = JSON.init(parseJSON: dataStr);
-            let offer = RTCSessionDescription(
-                type: RTCSessionDescription.type(for: type),
-                sdp: dataMessage["sdp"].stringValue)
-            self.setOffer(offer);
-            break;
-        case "answer":
-            // answerを受け取った時の処理
-            LOG("Received answer ...")
-            break;
-        case "candidate":
-            LOG("Received candidate ...")
-            break;
-        case "geticecandidate":
-            LOG("Received geticecandidate ...")
-            break;
-        case "iceCandidates":
-            LOG("Received iceCandidates ...")
-            jsonMessage["data"].forEach{(_, data) in
-                addIceCandidate(RTCIceCandidate(
-                    sdp:data["candidate"].stringValue,
-                    sdpMLineIndex:data["sdpMLineIndex"].int32Value,
-                    sdpMid:data["sdpMid"].stringValue
-                ));
-            }
-            break;
-        case "close":
-            LOG("peer is closed ...")
-            hangUp()
-            break;
-        case "message":
-            LOG(text);
-            break;
-        default:
-            return
-        }
-    }
-    
-    func websocketDidReceiveData(socket: WebSocket, data: Data) {
-        LOG("data.count: \(data.count)")
-    }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {
         // 接続情報交換の状況が変化した際に呼ばれます

@@ -7,6 +7,6 @@ target 'Uv4lUvcViewer' do
 
   # Pods for Uv4lUvcViewer
   pod 'WebRTC', '63.11.20455'
-  pod 'Starscream', '~> 2.0.4'
-  pod 'SwiftyJSON'
+  pod 'Starscream', '3.0.4'
+  pod 'SwiftyJSON','4.0.0'
 end
