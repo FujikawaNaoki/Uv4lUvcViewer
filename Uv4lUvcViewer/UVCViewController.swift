@@ -82,7 +82,7 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
     var remoteVideoTrack: RTCVideoTrack?
     var remoteAudioTrack: RTCAudioTrack?
     
-    var localAudioTrack: RTCAudioTrack?
+    //var localAudioTrack: RTCAudioTrack?
     
     var audioSource: RTCAudioSource?
     var videoSource: RTCAVFoundationVideoSource?
@@ -92,9 +92,15 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
     
     @IBOutlet weak var waveformView: WaveformView!
     
+    func configureAudioSession(block: () -> Void) {
+        let session = RTCAudioSession.sharedInstance()
+        session.lockForConfiguration()
+        block()
+        session.unlockForConfiguration()
+    }
     
     func startRecording() {
-        
+        LOG("startRec")
         /**
          M61 より RTCAudioSession という音声を扱うクラスが追加されました（プライベートな実装でしたがフレームワークで利用できるようになりました）。
          ほぼ AVAudioSession のプロパティの単純なラッパーです。このオブジェクトのプロパティを操作すると、
@@ -104,52 +110,61 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
          API の中でも特に情報がない分野なので、がんばって自力でどうにかしましょう。
          https://gist.github.com/szktty/999a34c64cc4ea60de43c4c1adc93203
         */
-        let recordingSession = RTCAudioSession.sharedInstance();
+        let RTCSession = RTCAudioSession.sharedInstance();
+        let AVSession = AVAudioSession.sharedInstance();
+        LOG(RTCSession.debugDescription);
         
-        //let recordingSession = AVAudioSession.sharedInstance();
         let recorderSettings = [AVSampleRateKey: NSNumber(value:44100.0),
                                 AVFormatIDKey: NSNumber(value:kAudioFormatAppleLossless),
                                 AVNumberOfChannelsKey: NSNumber(value: 2),
                                 AVEncoderAudioQualityKey: NSNumber(value: Int8(AVAudioQuality.min.rawValue))]
+        
         let url:URL = URL(fileURLWithPath:"/dev/null");
         do {
-            try recordingSession.setCategory(AVAudioSessionCategoryPlayAndRecord);
-            
-            try recordingSession.setActive(true);
-            
+            RTCSession.lockForConfiguration();
+            try RTCSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
+            try RTCSession.overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
+            try RTCSession.setActive(true)
+            RTCSession.unlockForConfiguration();
+
+//            try AVSession.setInputDataSource(RTCSession.outputDataSource);
+//            recordingSession.lockForConfiguration();
+//            try recordingSession.setCategory(AVAudioSessionCategoryPlayAndRecord);
+//            try recordingSession.setActive(true);
+//            recordingSession.unlockForConfiguration();
+
             self.recorder = try AVAudioRecorder.init(url: url, settings: recorderSettings as [String : Any]);
             let displayLink: CADisplayLink = CADisplayLink(target: self, selector: #selector(UVCViewController.updateMeters));
             displayLink.add(to: RunLoop.current, forMode: RunLoopMode.commonModes);
             self.recorder.prepareToRecord();
             self.recorder.isMeteringEnabled = true;
             self.recorder.record();
-            print("recorder enabled");
-        } catch {
-            print("recorder init failed");
+
+            LOG("###recorder enabled");
+        } catch let error as NSError {
+            LOG("###########  recorder init failed!!!!!!");
+            print("【エラーが発生しました : \(error)】")
         }
     }
-    func checkMicPermission() -> Bool {
-        var permissionCheck: Bool = false
-        
-        switch AVAudioSession.sharedInstance().recordPermission() {
-        case AVAudioSessionRecordPermission.granted:
-            permissionCheck = true
-        case AVAudioSessionRecordPermission.denied:
-            permissionCheck = false
-        case AVAudioSessionRecordPermission.undetermined:
-            AVAudioSession.sharedInstance().requestRecordPermission({ (granted) in
-                if granted {
-                    permissionCheck = true
-                } else {
-                    permissionCheck = false
-                }
-            })
-        default:
-            break
-        }
-        
-        return permissionCheck
-    }
+//    func checkMicPermission() -> Bool {
+//        var permissionCheck: Bool = false
+//
+//        switch AVAudioSession.sharedInstance().recordPermission() {
+//        case AVAudioSessionRecordPermission.granted:
+//            permissionCheck = true
+//        case AVAudioSessionRecordPermission.denied:
+//            permissionCheck = false
+//        case AVAudioSessionRecordPermission.undetermined:
+//            AVAudioSession.sharedInstance().requestRecordPermission({ (granted) in
+//                if granted {
+//                    permissionCheck = true
+//                } else {
+//                    permissionCheck = false
+//                }
+//            })
+//        }
+//        return permissionCheck
+//    }
     @objc func updateMeters() {
         var normalizedValue: Float
         recorder.updateMeters()
@@ -157,47 +172,33 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
         self.waveformView.updateWithLevel(level: normalizedValue)
     }
     
-    //Recorder Setup Begin
-    @objc func setupRecorder() {
-        if(checkMicPermission()) {
-            //startRecording()
-        } else {
-            print("permission denied")
-        }
-        RTCEnableMetrics();
-        RTCEnableMetrics();
-        let rtcAudioSession = RTCAudioSession.sharedInstance();
-        rtcAudioSession.useManualAudio = true;
-    }
-    
-    
     func _normalizedPowerLevelFromDecibels(decibels:Float) -> Float {
         if (decibels < -60.0 || decibels == 0.0) {
             return 0.0;
         }
-        
         return pow((pow(10.0, 0.05 * decibels) - pow(10.0, 0.05 * -60.0)) * (1.0 / (1.0 - pow(10.0, 0.05 * -60.0))), 1.0 / 2.0);
-        
     }
     
-    //RTCVideoCapturer -> RTCVideoSource (RTCVideoCapturerDelegate) -> RTCVideoTrack -> RTCVideoRenderer (プロトコル)
-    //RTCVideoCapturerDelegate を実装したクラスを用意
+    // RTCVideoCapturer -> RTCVideoSource (RTCVideoCapturerDelegate) -> RTCVideoTrack -> RTCVideoRenderer (プロトコル)
+    // RTCVideoCapturerDelegate を実装したクラスを用意
     // RTCVideoCapturer にセットし、 capturer(_:didCapture:) で受け取った映像フレームを加工してから
     // RTCVideoSource の　capturer(_:didCapture:) に加工後の映像フレームを渡します。
     // RTCVideoCapture と RTCVideoSource の間にフィルターを挟む
 
-    //var rtcVideoSource:RTCVideoSource?
-    //var rtcVideoCapture:RTCVideoCapturer?
-    
     override func viewDidLoad() {
         
         super.viewDidLoad();
         
-        setupRecorder();
+//        if(checkMicPermission()) {
+//        } else {
+//            print("permission denied");
+//            return;
+//        }
         
         remoteVideoView.delegate = self;
         // RTCPeerConnectionFactoryの初期化
         peerConnectionFactory = RTCPeerConnectionFactory();
+        
         // 音声と映像ソースの初期化
         startVideo();
         
@@ -206,6 +207,8 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
         //自己証明を許可
         websocket.disableSSLCertValidation = true;
         websocket.connect();
+        
+        startRecording();
     }
     
     deinit {
@@ -218,30 +221,25 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
     }
     
     func startVideo() {
-        // 音声ソースの設定
-        let audioSourceConstraints = RTCMediaConstraints(
-            mandatoryConstraints: nil, optionalConstraints: nil)
-        // 音声ソースの生成
+        // 音声ソースの設定/生成
+        let audioSourceConstraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
         audioSource = peerConnectionFactory.audioSource(with: audioSourceConstraints)
-        
-        // 映像ソースの設定
-        let videoSourceConstraints = RTCMediaConstraints(
-            mandatoryConstraints: nil, optionalConstraints: nil);
-        
+        // 映像ソースの設定/生成
+        let videoSourceConstraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil);
         videoSource = peerConnectionFactory.avFoundationVideoSource(with: videoSourceConstraints);
         
         // 音声トラックの作成
-        localAudioTrack = peerConnectionFactory.audioTrack(with: audioSource!, trackId: "ARDAMSa0");
-        // PeerConnectionからSenderを作成
-//        let audioSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindAudio, streamId: "ARDAMS")
-//        // Senderにトラックを設定
-//        audioSender.track = localAudioTrack
-//        // 映像トラックの作成
-//        let localVideoTrack = peerConnectionFactory.videoTrack(with: videoSource!, trackId: "ARDAMSv0")
-//        // PeerConnectionからVideoのSenderを作成
-//        let videoSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindVideo, streamId: "ARDAMS")
-//        // Senderにトラックを設定
-//        videoSender.track = localVideoTrack
+//      localAudioTrack = peerConnectionFactory.audioTrack(with: audioSource!, trackId: "ARDAMSa0");
+//      PeerConnectionからSenderを作成
+//      let audioSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindAudio, streamId: "ARDAMS")
+        // Senderにトラックを設定
+//      audioSender.track = localAudioTrack
+        // 映像トラックの作成
+//      let localVideoTrack = peerConnectionFactory.videoTrack(with: videoSource!, trackId: "ARDAMSv0")
+        // PeerConnectionからVideoのSenderを作成
+//      let videoSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindVideo, streamId: "ARDAMS")
+        // Senderにトラックを設定
+//      videoSender.track = localVideoTrack
     }
     
     func prepareNewConnection() -> RTCPeerConnection {
@@ -375,7 +373,7 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
         
         if (stream.audioTracks.count >= 1) {
             remoteAudioTrack = stream.audioTracks[0];
-            localAudioTrack = remoteAudioTrack;
+            //localAudioTrack = remoteAudioTrack;
         }
                 
         // 映像/音声が追加された際に呼ばれます
@@ -387,8 +385,9 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
                 self.remoteVideoTrack = stream.videoTracks[0];
                 // remoteVideoViewに紐づける
                 self.remoteVideoTrack?.add(self.remoteVideoView)
+                //
                 
-                self.startRecording();
+                //self.startRecording();
             }
         })
     }
