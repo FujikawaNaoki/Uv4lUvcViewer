@@ -17,7 +17,7 @@ class UVCViewController: UIViewController, WebSocketDelegate,
     var remoteVideoTrack: RTCVideoTrack?
     var remoteAudioTrack: RTCAudioTrack?
     
-    //var localAudioTrack: RTCAudioTrack?
+    var localAudioTrack: RTCAudioTrack?
     
     var audioSource: RTCAudioSource?
     var videoSource: RTCAVFoundationVideoSource?
@@ -39,19 +39,19 @@ class UVCViewController: UIViewController, WebSocketDelegate,
          API の中でも特に情報がない分野なので、がんばって自力でどうにかしましょう。
          https://gist.github.com/szktty/999a34c64cc4ea60de43c4c1adc93203
         */
-        let rtcAudioSession = RTCAudioSession.sharedInstance();
+        let recordingSession = RTCAudioSession.sharedInstance();
         
-        
-        
-        let recordingSession = AVAudioSession.sharedInstance();
+        //let recordingSession = AVAudioSession.sharedInstance();
         let recorderSettings = [AVSampleRateKey: NSNumber(value:44100.0),
                                 AVFormatIDKey: NSNumber(value:kAudioFormatAppleLossless),
                                 AVNumberOfChannelsKey: NSNumber(value: 2),
                                 AVEncoderAudioQualityKey: NSNumber(value: Int8(AVAudioQuality.min.rawValue))]
         let url:URL = URL(fileURLWithPath:"/dev/null");
         do {
-            try recordingSession.setCategory(AVAudioSessionCategorySoloAmbient);
+            try recordingSession.setCategory(AVAudioSessionCategoryPlayAndRecord);
+            
             try recordingSession.setActive(true);
+            
             self.recorder = try AVAudioRecorder.init(url: url, settings: recorderSettings as [String : Any]);
             let displayLink: CADisplayLink = CADisplayLink(target: self, selector: #selector(UVCViewController.updateMeters));
             displayLink.add(to: RunLoop.current, forMode: RunLoopMode.commonModes);
@@ -99,6 +99,10 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         } else {
             print("permission denied")
         }
+        RTCEnableMetrics();
+        RTCEnableMetrics();
+        let rtcAudioSession = RTCAudioSession.sharedInstance();
+        rtcAudioSession.useManualAudio = true;
     }
     
     
@@ -162,8 +166,8 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         videoSource = peerConnectionFactory.avFoundationVideoSource(with: videoSourceConstraints);
         
         // 音声トラックの作成
-//        localAudioTrack = peerConnectionFactory.audioTrack(with: audioSource!, trackId: "ARDAMSa0");
-//        // PeerConnectionからSenderを作成
+        localAudioTrack = peerConnectionFactory.audioTrack(with: audioSource!, trackId: "ARDAMSa0");
+        // PeerConnectionからSenderを作成
 //        let audioSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindAudio, streamId: "ARDAMS")
 //        // Senderにトラックを設定
 //        audioSender.track = localAudioTrack
@@ -369,7 +373,7 @@ class UVCViewController: UIViewController, WebSocketDelegate,
         
         if (stream.audioTracks.count >= 1) {
             remoteAudioTrack = stream.audioTracks[0];
-            //localAudioTrack = remoteAudioTrack;
+            localAudioTrack = remoteAudioTrack;
         }
                 
         // 映像/音声が追加された際に呼ばれます
