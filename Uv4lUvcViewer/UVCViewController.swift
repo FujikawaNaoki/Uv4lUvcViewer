@@ -121,11 +121,15 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
         
         let url:URL = URL(fileURLWithPath:"/dev/null");
         do {
-            RTCSession.lockForConfiguration();
-            try RTCSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
-            try RTCSession.overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
-            try RTCSession.setActive(true)
-            RTCSession.unlockForConfiguration();
+            //RTCSession.lockForConfiguration();
+            //try RTCSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
+            //try RTCSession.overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
+            //try RTCSession.setActive(true)
+            try AVSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
+            try AVSession.overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
+            try AVSession.setActive(true)
+
+            //RTCSession.unlockForConfiguration();
 
 //            try AVSession.setInputDataSource(RTCSession.outputDataSource);
 //            recordingSession.lockForConfiguration();
@@ -208,7 +212,7 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
         websocket.disableSSLCertValidation = true;
         websocket.connect();
         
-        startRecording();
+        //startRecording();
     }
     
     deinit {
@@ -387,7 +391,7 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
                 self.remoteVideoTrack?.add(self.remoteVideoView)
                 //
                 
-                //self.startRecording();
+                self.startRecording();
             }
         })
     }
