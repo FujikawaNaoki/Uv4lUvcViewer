@@ -110,10 +110,9 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
          API の中でも特に情報がない分野なので、がんばって自力でどうにかしましょう。
          https://gist.github.com/szktty/999a34c64cc4ea60de43c4c1adc93203
         */
-        let RTCSession = RTCAudioSession.sharedInstance();
-        let AVSession = AVAudioSession.sharedInstance();
-        LOG(RTCSession.debugDescription);
-        
+        let rtcSession = RTCAudioSession.sharedInstance();
+        LOG(rtcSession.debugDescription);
+        rtcSession.useManualAudio = true;
         let recorderSettings = [AVSampleRateKey: NSNumber(value:44100.0),
                                 AVFormatIDKey: NSNumber(value:kAudioFormatAppleLossless),
                                 AVNumberOfChannelsKey: NSNumber(value: 2),
@@ -121,21 +120,12 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
         
         let url:URL = URL(fileURLWithPath:"/dev/null");
         do {
-            //RTCSession.lockForConfiguration();
-            //try RTCSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
-            //try RTCSession.overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
-            //try RTCSession.setActive(true)
-            try AVSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
-            try AVSession.overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
-            try AVSession.setActive(true)
-
-            //RTCSession.unlockForConfiguration();
-
-//            try AVSession.setInputDataSource(RTCSession.outputDataSource);
-//            recordingSession.lockForConfiguration();
-//            try recordingSession.setCategory(AVAudioSessionCategoryPlayAndRecord);
-//            try recordingSession.setActive(true);
-//            recordingSession.unlockForConfiguration();
+            rtcSession.lockForConfiguration();
+            try rtcSession.setCategory(AVAudioSessionCategoryPlayAndRecord,with:.duckOthers);            
+            try rtcSession.setMode(AVAudioSessionModeVoiceChat);
+            try rtcSession.overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
+            try rtcSession.setActive(true)
+            rtcSession.unlockForConfiguration();
 
             self.recorder = try AVAudioRecorder.init(url: url, settings: recorderSettings as [String : Any]);
             let displayLink: CADisplayLink = CADisplayLink(target: self, selector: #selector(UVCViewController.updateMeters));
@@ -143,6 +133,7 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
             self.recorder.prepareToRecord();
             self.recorder.isMeteringEnabled = true;
             self.recorder.record();
+        
 
             LOG("###recorder enabled");
         } catch let error as NSError {
@@ -153,7 +144,7 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
 //    func checkMicPermission() -> Bool {
 //        var permissionCheck: Bool = false
 //
-//        switch AVAudioSession.sharedInstance().recordPermission() {
+//        switch RTCAudioSession.sharedInstance().recordPermission() {
 //        case AVAudioSessionRecordPermission.granted:
 //            permissionCheck = true
 //        case AVAudioSessionRecordPermission.denied:
@@ -231,19 +222,7 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
         // 映像ソースの設定/生成
         let videoSourceConstraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil);
         videoSource = peerConnectionFactory.avFoundationVideoSource(with: videoSourceConstraints);
-        
-        // 音声トラックの作成
-//      localAudioTrack = peerConnectionFactory.audioTrack(with: audioSource!, trackId: "ARDAMSa0");
-//      PeerConnectionからSenderを作成
-//      let audioSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindAudio, streamId: "ARDAMS")
-        // Senderにトラックを設定
-//      audioSender.track = localAudioTrack
-        // 映像トラックの作成
-//      let localVideoTrack = peerConnectionFactory.videoTrack(with: videoSource!, trackId: "ARDAMSv0")
-        // PeerConnectionからVideoのSenderを作成
-//      let videoSender = peerConnection.sender(withKind: kRTCMediaStreamTrackKindVideo, streamId: "ARDAMS")
-        // Senderにトラックを設定
-//      videoSender.track = localVideoTrack
+
     }
     
     func prepareNewConnection() -> RTCPeerConnection {
