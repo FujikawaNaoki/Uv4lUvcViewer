@@ -203,7 +203,7 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
         websocket.disableSSLCertValidation = true;
         websocket.connect();
         
-        //startRecording();
+        startRecording();
     }
     
     deinit {
@@ -370,7 +370,7 @@ RTCPeerConnectionDelegate, RTCEAGLVideoViewDelegate {
                 self.remoteVideoTrack?.add(self.remoteVideoView)
                 //
                 
-                self.startRecording();
+                //self.startRecording();
             }
         })
     }
